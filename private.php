@@ -221,8 +221,8 @@ class PrivatePlugin extends Plugin
         $form = $this->filterFormData($_POST);
 
 
-        if(isset($form['username']) == true && array_key_exists($form['username'], $this->privateconf['users']) && $this->privateconf['users'][$form['username']] == sha1($form['password'])) {
-            $_SESSION[$this->privateconf['session_ss']] = sha1($form['username']);
+        if(isset($form['username']) == true && array_key_exists($form['username'], $this->privateconf['users']) && $this->privateconf['users'][$form['username']] == hash('sha256', $form['password'])) {
+            $_SESSION[$this->privateconf['session_ss']] = hash('sha256', $form['username']);
             $_SESSION['username'] = $form['username'];
             return true;
         } else {
@@ -239,7 +239,7 @@ class PrivatePlugin extends Plugin
 
     protected function isConnected()
     {
-        if (isset($_SESSION[$this->privateconf['session_ss']]) && $_SESSION[$this->privateconf['session_ss']] == sha1($_SESSION['username'])){
+        if (isset($_SESSION[$this->privateconf['session_ss']]) && $_SESSION[$this->privateconf['session_ss']] == hash('sha256', $_SESSION['username'])){
             return true;
         } else {
             return false;
