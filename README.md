@@ -1,116 +1,70 @@
-# Private Grav Plugin
+## Context
+I have decided that this project is something that I would like to work on, I am an amateur and do not have a history so please be patient with me.<br>
+While using this plugin, I noticed a few glaring issues, such as the project using SHA1, which has been long deprecated, alongside some of the existing community issues. Therefore, I would just be making my own "fork" to get this a little more secure.
 
-> New version is [Private Site](https://github.com/Diyzzuf/grav-plugin-private-site) 
+## Current Security Issues
 
-`Private` is a [Grav](http://github.com/getgrav/grav) Plugin.
+1. **Weak Password Hashing**: 
+   - Using simple SHA-256 without salt is vulnerable to rainbow table attacks
+   - No adaptive hashing mechanism (like bcrypt) that can be strengthened over time
 
-Private provides an authentication form to keep your entire Grav site or part of it private from the general public.
+2. **Predictable Session Management**:
+   - Session tokens are derived directly from usernames (hash('sha256', $username))
+   - Session tokens never change between logins
+   - No session timeout functionality
 
-![Private](assets/readme.jpg)
+3. **No Brute Force Protection**:
+   - No mechanism to limit or delay repeated login attempts
+   - No account lockout after failed attempts
 
-# Installation
+4. **Authentication Implementation**:
+   - Does not leverage native Grav authentication mechanisms
+   - Could benefit from integration with existing Grav user management
 
-Installing the Private plugin can be done in one of two ways. The GPM (Grav Package Manager) installation method enables you to quickly and easily install the plugin with a simple terminal command, while the manual method allows you to do so by downloading a zip file to place in the Grav plugins directory. 
+5. **Input Validation**:
+   - Basic form validation but no real sanitization of inputs
+   - Potential for injection if usernames or other inputs aren't properly validated
 
-## GPM Installation (Preferred)
+6. **No Auditing or Logging**:
+   - No logging of login attempts, successful or failed
+   - No logging of access to protected pages
 
-The simplest way to install this plugin is via the [Grav Package Manager (GPM)](http://learn.getgrav.org/advanced/grav-gpm) through your system's Terminal (also called the command line).  From the root of your Grav install type:
+## Todo List for More Secure Version
 
-    bin/gpm install private
+```
+TODO for Private Plugin Security Upgrade:
 
-This will install the Private plugin into your `/user/plugins` directory within Grav. Its files can be found under `/your/site/grav/user/plugins/private`.
+1. Password Management
+   - [ ] Implement PHP's password_hash() and password_verify() functions
+   - [ ] Add mechanism to upgrade legacy passwords
+   - [ ] Add password complexity requirements (optional for admins)
 
-## Manual Installation
+2. Session Security
+   - [ ] Generate random session tokens using random_bytes()
+   - [ ] Implement session timeout/expiration
+   - [ ] Add session regeneration on privilege level changes
 
-To install this plugin, just download the zip version of this repository and unzip it under `/your/site/grav/user/plugins`. Then, rename the folder to `private`. You can find these files either on [GitHub](https://github.com/diyzzuf/grav-plugin-private) or via [GetGrav.org](http://getgrav.org/downloads/plugins#extras).
+3. Brute Force Protection
+   - [ ] Implement failed login attempt tracking
+   - [ ] Add progressive delays or temporary lockouts
+   - [ ] Add IP-based throttling (optional)
 
-You should now have all the plugin files under
+4. Code Improvements
+   - [ ] Consider integration with Grav's user management
+   - [ ] Refactor to follow modern PHP practices
+   - [ ] Add proper PHPDoc comments
+   - [ ] Implement PSR-12 coding standards
 
-    /your/site/grav/user/plugins/private
+5. Additional Features
+   - [ ] Add login/access logging
+   - [ ] Add configurable redirect options
+   - [ ] Add two-factor authentication support (optional)
+   - [ ] Add remember-me functionality (optional)
 
+6. Documentation
+   - [ ] Document secure configuration for production
+   - [ ] Provide upgrade path guidance for existing users
+   - [ ] Document all configuration options
+```
 
-# Usage
-
-By default, the password is `password`, username is **not** needed and Grav is **fully private**.
-
-To customize this parameters (and more), you first need to create an override config. To do so, create the folder `user/config/plugins` (if it doesn't exist already) and copy the [private.yaml](private.yaml) config file in there and then make your edits.
-
-## Recommended changes to be made to ensure your site is secure (See Options section below)
-1. **Change** the default password in your `user/config/plugins/private.yaml`
-2. **Change** the default security salt in your `user/config/plugins/private.yaml`
-3. **Customize** your privacy rules
-
-# Options
-
-###### Plugin
-Enable or Disable the entire plugin (default: `true`).
-
-    enabled: (true|false)
-
-###### Routing
-Routes of login and logout. You can customize it by replacing value (e.g: login: "/admin" for "mywebsite.com/admin" )
-
-    routes:
-        login: "/login"
-        logout: "/logout"
-
-###### Security Salt
-Security Salt for session. **IT MUST BE AN ALPHANUMERIC CHAR** You can go to this [generator](http://www.sha1-online.com/) for your own. (or similar SHA-1 Generator )
-
-    session_ss: random_value
-
-###### Private Site
-If `true`, the entire site is private. If false, then Private can be enabled on a page by page basis by using the `private_tag` ( See after ) (default: `true`)
-
-    private_site: (true|false)
-    
-###### Private Tag
-If the private_site value is `false`, you will need to add the `private_tag` on your private page. (default: `hidden`)
-See [Grav Taxonomy](http://learn.getgrav.org/content/taxonomy) for more information.
-
-    private_tag: hidden
-
-###### Username on login page
-Enable (`true`) or Disable (`false`) the username field on the private page's login form. (default: `false`)
-> Note : If you disable the username, you need to **keep** `no_user` username in the `users` parameters.
-    enable_username: (true|false)
-
-###### Users list
-List of users. For adding user, just create a new line **keeping the identation**. (default password: `password`)
-> Note : If enable_username is `false`, you must not delete the `no_user` user in the list.
-
->> Note : The password **MUST BE** a SHA1 value. For quick checking see [SHA1 Online](http://www.sha1-online.com) to generate your SHA1 password. But it is adwised to generate it locally as http and any transmission is not as secure as no transmission at all. Use command: ` echo -n "yourpassword" | sha1sum`. You can remove it thereafter from bash history with `history -d 1234` and sourcing the ~/bashrc.
-
-    users:
-        no_user : sha1_password
-
-###### Text
-This section allows you to change the text which will appear on the login form on Private enabled pages.
-
-    fields:
-        username:
-            label: "Username"
-            placeholder: "Enter your username"
-
-# Updating
-
-As development for the Private plugin continues, new versions may become available that add additional features and functionality, improve compatibility with newer Grav releases, and generally provide a better user experience. Updating Private is easy, and can be done through Grav's GPM system, as well as manually.
-
-## GPM Update (Preferred)
-
-The simplest way to update this plugin is via the [Grav Package Manager (GPM)](http://learn.getgrav.org/advanced/grav-gpm). You can do this by navigating to the root directory of your Grav install using your system's Terminal (also called command line) and typing the following:
-
-bin/gpm update private
-
-This command will check your Grav install to see if your Private plugin is due for an update. If a newer release is found, you will be asked whether or not you wish to update. To continue, type `y` and hit enter. The plugin will automatically update and clear Grav's cache.
-
-## Manual Update
-
-Manually updating Private is pretty simple. Here is what you will need to do to get this done:
-
-* Delete the `your/site/user/plugins/private` directory.
-* Download the new version of the Private plugin from either [GitHub](https://github.com/diyzzuf/grav-plugin-private) or [GetGrav.org](http://getgrav.org/downloads/plugins#extras).
-* Unzip the zip file in `your/site/user/plugins` and rename the resulting folder to `private`.
-* Clear the Grav cache. The simplest way to do this is by going to the root Grav directory in terminal and typing `bin/grav clear-cache`.
-
-> Note: Any changes you have made to any of the files listed under this directory will also be removed and replaced by the new set. Any files located elsewhere (for example a YAML settings file placed in `user/config/plugins`) will remain intact.
+These improvements would significantly enhance the security posture of the plugin while maintaining its core functionality. The most critical changes would be implementing proper password hashing with PHP's password_hash() function and improving the session management system to use truly random tokens instead of username-derived ones.
